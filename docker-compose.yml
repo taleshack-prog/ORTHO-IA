@@ -1,0 +1,102 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: orto-ia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: orto_ia
+      POSTGRES_USER: orto_user
+      POSTGRES_PASSWORD: orto_secret
+    ports:
+      - "5436:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./database/seeds/knowledge_base.sql:/docker-entrypoint-initdb.d/02_seeds.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orto_user -d orto_ia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: orto-ia-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: orto-ia-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+asyncpg://orto_user:orto_secret@postgres:5432/orto_ia
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-local}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      S3_BUCKET: ${S3_BUCKET:-orto-ia-files}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: orto-ia-celery
+    restart: unless-stopped
+    command: celery -A app.tasks.analysis_tasks.celery_app worker --loglevel=info --concurrency=2
+    environment:
+      DATABASE_URL: postgresql+asyncpg://orto_user:orto_secret@postgres:5432/orto_ia
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-key-local}
+    depends_on:
+      - backend
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    image: node:20-alpine
+    container_name: orto-ia-frontend
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:
+  frontend_node_modules:
+
+networks:
+  default:
+    name: orto-ia-network

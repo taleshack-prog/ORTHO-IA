@@ -1,0 +1,55 @@
+# ============================================================
+# ORTO-IA — Backend Dependencies
+# Versões verificadas no PyPI em 18/05/2026
+# ============================================================
+
+# ── Web Framework ───────────────────────────────────────────
+fastapi==0.136.1
+uvicorn[standard]==0.34.3
+python-multipart==0.0.20
+
+# ── Banco de Dados ──────────────────────────────────────────
+sqlalchemy[asyncio]==2.0.41
+asyncpg==0.30.0
+alembic==1.16.1
+pgvector==0.4.2
+
+# ── Validação / Serialização ────────────────────────────────
+pydantic==2.11.5
+pydantic-settings==2.9.1
+email-validator==2.2.0
+
+# ── IA / LLM ────────────────────────────────────────────────
+anthropic==0.102.0
+numpy==1.26.4
+scikit-learn==1.5.0
+
+# ── Processamento de Imagem ─────────────────────────────────
+Pillow==11.2.1
+pydicom==2.4.4
+opencv-python-headless==4.9.0.80
+
+# ── Filas / Tarefas Assíncronas ─────────────────────────────
+celery[redis]==5.6.3
+redis==5.2.1
+flower==2.0.1
+
+# ── Geração de PDF ──────────────────────────────────────────
+reportlab==4.5.1
+
+# ── Autenticação / Segurança ────────────────────────────────
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==44.0.3
+
+# ── HTTP Client ─────────────────────────────────────────────
+httpx==0.28.1
+
+# ── AWS / Storage ───────────────────────────────────────────
+boto3==1.38.25
+
+# ── Utilitários ─────────────────────────────────────────────
+python-dotenv==1.1.0
+structlog==25.3.0
+tenacity==9.1.2
+pytz==2025.2
