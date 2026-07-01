@@ -1,4 +1,4 @@
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API = process.env.NEXT_PUBLIC_API_URL || "https://ortho-ia-production.up.railway.app/api/v1";
 
 class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 
