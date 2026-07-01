@@ -46,7 +46,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
 class UserRegister(BaseModel):
     email: str
     full_name: str
-    crm: str
+    cro: str
     password: str
 
 
@@ -59,7 +59,7 @@ async def register(data: UserRegister, db: AsyncSession = Depends(get_db)):
         id=str(uuid.uuid4()),
         email=data.email,
         full_name=data.full_name,
-        crm=data.crm,
+        cro=data.cro,
         hashed_password=hash_password(data.password)
     )
     db.add(user)
@@ -82,6 +82,6 @@ async def me(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
-        "crm": current_user.crm,
+        "cro": current_user.crm,
         "subscription_tier": current_user.subscription_tier
     }
