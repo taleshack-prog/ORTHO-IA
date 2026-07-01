@@ -5,14 +5,14 @@ class ApiError extends Error { constructor(public status: number, message: strin
 async function req<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = typeof window !== "undefined" ? localStorage.getItem("orto_token") : null;
   const res = await fetch(`${API}${path}`, { ...opts, headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(opts.headers || {}) } });
-  if (!res.ok) { const b = await res.json().catch(() => ({ detail: "Erro" })); throw new ApiError(res.status, b.detail); }
+  if (!res.ok) { const b = await res.json().catch(() => ({ detail: "Erro" })); const msg = res.status === 401 ? "Sessão expirada. Faça login novamente." : (b.detail || "Erro na requisição"); throw new ApiError(res.status, msg); }
   if (res.status === 204) return null as T;
   return res.json();
 }
 
 export const auth = {
   login: (email: string, password: string) => req<{ access_token: string }>("/auth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ username: email, password }) }),
-  register: (d: { email: string; full_name: string; crm: string; password: string }) => req("/auth/register", { method: "POST", body: JSON.stringify(d) }),
+  register: (d: { email: string; full_name: string; cro: string; password: string }) => req("/auth/register", { method: "POST", body: JSON.stringify(d) }),
   me: () => req<User>("/auth/me"),
 };
 export const patients = {
@@ -40,7 +40,7 @@ export const reports = {
   stats: () => req<ReportStats>("/reports/stats"),
 };
 
-export interface User { id: string; email: string; full_name: string; crm: string; subscription_tier: string; }
+export interface User { id: string; email: string; full_name: string; cro: string; subscription_tier: string; }
 export interface Patient { id: string; full_name: string; sex?: string; phone?: string; email?: string; chief_complaint?: string; }
 export interface Case { id: string; patient_id: string; patient_name?: string; status: string; processing_stage?: string; chief_complaint?: string; ai_diagnosis?: { skeletal_class?: string; facial_pattern?: string; dental_class?: string; summary?: string }; treatment_plan?: Record<string, unknown>; clinical_warnings?: string[]; pdf_report_url?: string; image_urls?: string[]; created_at: string; analyzed_at?: string; }
 export interface Report { case_id: string; patient_name: string; patient_age?: number; analyzed_at: string; pdf_url: string; skeletal_class?: string; warnings_count: number; }
