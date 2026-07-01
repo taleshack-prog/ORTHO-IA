@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255) NOT NULL,
-    crm VARCHAR(50) NOT NULL,
+    cro VARCHAR(50) NOT NULL,
     hashed_password VARCHAR(255) NOT NULL,
     subscription_tier VARCHAR(50) DEFAULT 'starter',
     is_active BOOLEAN DEFAULT TRUE,
