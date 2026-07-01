@@ -82,6 +82,6 @@ async def me(current_user: User = Depends(get_current_user)):
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
-        "cro": current_user.crm,
+        "cro": current_user.cro,
         "subscription_tier": current_user.subscription_tier
     }
