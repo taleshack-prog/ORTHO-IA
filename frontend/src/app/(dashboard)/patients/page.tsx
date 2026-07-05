@@ -1,15 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { patients, type Patient } from "@/lib/api";
+import { patients, type Patient, ApiError } from "@/lib/api";
 
 export default function PatientsPage() {
+  const router = useRouter();
   const [data, setData] = useState<{ total: number; patients: Patient[] }>({ total: 0, patients: [] });
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string|null>(null);
 
   useEffect(() => {
-    patients.list({ search: search || undefined }).then(setData).finally(() => setLoading(false));
+    setLoading(true);
+    setError(null);
+    patients.list({ search: search || undefined })
+      .then(setData)
+      .catch(e => {
+        if (e instanceof ApiError && e.status === 401) {
+          router.push("/login");
+        } else {
+          setError(e instanceof Error ? e.message : "Erro ao carregar pacientes");
+        }
+      })
+      .finally(() => setLoading(false));
   }, [search]);
 
   return (
@@ -23,9 +37,18 @@ export default function PatientsPage() {
           + Novo Paciente
         </Link>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm flex justify-between">
+          <span>{error}</span>
+          <button onClick={() => router.push("/login")} className="underline">Fazer login novamente</button>
+        </div>
+      )}
+
       <input type="text" placeholder="Buscar por nome..." value={search}
-        onChange={e => { setSearch(e.target.value); setLoading(true); }}
+        onChange={e => { setSearch(e.target.value); }}
         className="w-full mb-4 px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
       {loading ? (
         <div className="flex justify-center py-16"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900" /></div>
       ) : data.patients.length === 0 ? (
